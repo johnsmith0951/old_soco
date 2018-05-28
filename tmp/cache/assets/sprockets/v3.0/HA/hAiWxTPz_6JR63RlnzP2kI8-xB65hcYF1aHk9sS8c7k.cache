@@ -1,0 +1,9 @@
+I"j(function() {
+  $hoge(function() {
+    return alert("Hello World");
+  });
+
+  hoge();
+
+}).call(this);
+:ET

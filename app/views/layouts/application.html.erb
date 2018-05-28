@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%= favicon_link_tag() %>
+     <title><%= page_title %></title>
+    <%= csrf_meta_tags %>
+      <script type="text/javascript">
+        if ((navigator.userAgent.indexOf('iPhone') > 0 && navigator.userAgent.indexOf('iPad') == -1) || navigator.userAgent.indexOf('iPod') > 0 || navigator.userAgent.indexOf('Android') > 0){
+          document.write('<link rel="stylesheet" type="text/css" href="/Stylesheet/SP.css"/>');
+        }else{
+          document.write('<link rel="stylesheet" type="text/css" href="/Stylesheet/PC.css" />');
+        }
+      </script>
+      <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+<link href="https://fonts.googleapis.com/css?family=Candal" rel="stylesheet">
+  </head>
+
+  <body>
+  	<header>
+	<div class="top" id="top">
+	<a href="/"><div class="top_left">Soco<img src="/icon.png"></div></a>
+	<ul class="header-menus">
+    <li>
+			<div class="post_page" id="post_page"><% if params[:room_id].present? || params[:id].present? then %>
+        <a herf="#" id="new_post_form" class="show-modal"><%else%><a href="/rooms/new"><% end %>
+      <img src="/post.png" height="28">
+    </a></div>
+		</li>
+    <li>
+      <div class="post_page"><a herf="#" id="setting" class="show-modal">
+      <img src="/setting.png" height="28">
+    </a></div>
+    </li>
+	</ul>
+</div>
+</header>
+
+<div class="main" id="main">
+  <% if @room.present? then %>
+    <div id="room_name_wrapper" class="room_name">   
+      <img id="room_name" src="/room.png">
+      <%= @room.name %>
+    </div>
+  <% end %>
+
+    <%= yield %>
+   	</div>
+
+  </body>
+</html>

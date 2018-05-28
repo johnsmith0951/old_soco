@@ -1,0 +1,132 @@
+<head>
+  <% @page_title = "部屋一覧" %>
+  <% if Rails.cache.read('lock_room').present? then
+    locked_room = Rails.cache.read('lock_room')
+  end
+  %>
+  <meta http-equiv="content-type" charset="utf-8">
+  <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+  <script type="text/javascript" src="//maps.google.com/maps/api/js?key=AIzaSyCd3SCSn16uIQTi4MbNJ1QtDRCYMce44Yk&sensor=false"></script>
+</head>
+<div class="room_name"><img src="/list.png"> 部屋リスト</div>
+<div class="rooms">
+  <ul>
+    <div　class="roomlist" id="roomlist">
+      <a href="/rooms/new"><li>+ 新たに部屋を作る</li></a>
+      <a href="/rooms/0"><li>ラウンジ</li></a>
+      <div id="lockedRoom"></div>
+      <div class="loading" id="loading">
+        <img src="./loading.gif">
+        <br />位置情報を取得しています<br/><br/>
+      </div>
+      <div class="alert" id="alert">
+        位置情報を取得できませんでした。<br/>
+        <a href="/guide">こちら</a>を参照して、設定を確認してください。<br/><br/>
+      </div>
+    </div>
+  </ul>
+</div>
+<script>
+  window.onload = getLocation();
+  var hoge = <%= @locked_room_num.to_i %>;
+  var lockedRoomId = <%=@locked_room_num%>;
+  var lockedRoomName = "<%=@locked_room_name%>";
+
+  if(hoge > 0) {
+    $('#lockedRoom').append('<a href="/rooms/'+ lockedRoomId  + '?name=' + lockedRoomName + '"><li>' + '<img src="lock.png">' + lockedRoomName + '</li></a>');
+  }
+
+function getLocation(){
+  var geocoder;
+  navigator.geolocation.getCurrentPosition(is_success,is_error);
+  function is_success(position) {
+    var gpsLat = position.coords.latitude;
+    var gpsLng = position.coords.longitude;
+    gmap_init(gpsLat,gpsLng);
+  }
+  function is_error(error) {
+    var result = "";
+    switch(error.code) {
+      case 1:
+      result = '位置情報の取得が許可されていません';
+      break;
+      case 2:
+      result = '位置情報の取得に失敗';
+      break;
+      case 3:
+      result = 'タイムアウト';
+      break;
+    }
+    $("#loading").css("display", "none");
+    $("#alert").css("display", "block");
+  }
+
+// googlemap init
+function gmap_init(gpsLat,gpsLng) {
+  var geocoder = new google.maps.Geocoder();
+  var latlng = new google.maps.LatLng(gpsLat,gpsLng);
+
+  geocoder.geocode({'latLng':latlng},function(results,status){
+    if (status == google.maps.GeocoderStatus.OK) {
+      console.log(results[1].formatted_address);
+      result  = '現在地の取得に成功<br>';
+      result += '経度：' + gpsLat + '<br>';
+      result += '緯度：' + gpsLng + '<br>';
+      result += '住所：' + results[0].formatted_address + '<br>';
+      userLat = gpsLat;
+      userLng = gpsLng;
+      $("#loading").css("display", "none");
+      roomlist();
+    } else {
+      $("#loading").css("display", "none");
+      $("#alert").css("display", "block");
+
+      console.log(status);
+    }
+  });
+}
+}
+
+var roomlist = function(){
+  parseFloat(userLat);
+  parseFloat(userLng);
+  $.ajax({
+    url: location.href,
+    type: 'GET',
+    data: {
+      longitude: userLng,
+      latitude: userLat
+    },
+    dataType: 'json'
+  })
+  .then(function(data){
+    if(data.length > 0){
+      $.each(data, function(i, data){
+        if(<%= @locked_room_num %> != data['id']){
+        $('#roomlist').append('<a href="/rooms/'+ data['id']  + '?name=' + data['name'] + '"><li>' + data['name'] + '</li></a>');
+      }
+      })
+    }
+  })
+}
+var lockedRoom = function(){
+  parseFloat(userLat);
+  parseFloat(userLng);
+  $.ajax({
+    url: location.href,
+    type: 'GET',
+    data: {
+      longitude: userLng,
+      latitude: userLat
+    },
+    dataType: 'json'
+  })
+  .then(function(data){
+    if(data.length > 0){
+      $.each(data, function(i, data){
+        $('#roomlist').prepend('<a href="/rooms/'+ data['id']  + '?name=' + data['name'] + '"><li>' + data['name'] + '</li></a>');
+      })
+    }
+  })
+}
+</script>

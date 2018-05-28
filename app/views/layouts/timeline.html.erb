@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/earlyaccess/notosansjapanese.css" rel="stylesheet" />
+    <title>Soco</title>
+    <%= csrf_meta_tags %>
+      <script type="text/javascript">
+        if ((navigator.userAgent.indexOf('iPhone') > 0 && navigator.userAgent.indexOf('iPad') == -1) || navigator.userAgent.indexOf('iPod') > 0 || navigator.userAgent.indexOf('Android') > 0){
+          document.write('<link rel="stylesheet" type="text/css" href="/Stylesheet/SP.css"/>');
+        }else{
+          document.write('<link rel="stylesheet" type="text/css" href="/Stylesheet/PC.css" />');
+        }
+      </script>
+      <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+      <script src="//code.jquery.com/jquery-3.0.0.min.js"></script>
+  </head>
+
+  <body>
+  	
+    <%= yield %>
+
+  </body>
+</html>

@@ -1,0 +1,2 @@
+class AddSimilarityToPost < ApplicationRecord
+end

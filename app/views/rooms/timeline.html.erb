@@ -1,0 +1,381 @@
+<% @page_title = @room.name %>
+<% if Rails.cache.read('lock_room').present? then
+    locked_room = Rails.cache.read('lock_room')
+else
+    locked_room = -1;
+end
+%>
+<script src="//code.jquery.com/jquery-3.0.0.min.js"></script>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+<script type="text/javascript" src="//maps.google.com/maps/api/js?key=AIzaSyCd3SCSn16uIQTi4MbNJ1QtDRCYMce44Yk&sensor=false"></script>
+<div class="loading" id="loading">
+    <img src="/loading.gif">
+    <br />位置情報を取得しています<br/>
+</div>
+<div class="alert" id="alert">
+    <br />位置情報を取得できませんでした……<br/>
+</div>
+
+<div id="timeline" class="timeline">
+    <% unless @posts.present? %>
+    <div class="notification">まだ投稿がありません<br />最初の<a herf="#" id="new_post_form" class="show-modal">投稿</a>をしませんか？</div>
+    <% end %>
+    <% first_flag = 0 %>
+    <% @posts.each do |post|  %>
+    <div id="<%= post.id %>" class="post" id="content">
+        <div class="text_body">
+            <%= raw(hbr(post.content)) %>
+        </div>
+        <%= if post.image.present? then link_to post.image, :target=>["_blank"] do image_tag "#{post.image}" end end %>
+        <div class="text_data">
+            <% post.id %>
+            <div style="display:inline"><%= @postId[post.id] %></div> :
+            <%= time_ago_in_words(post.created_at) %>
+            <%=
+            if post.simvalue.present? then
+                if post.simvalue > "0.49" then
+                    link_to(">>#{@postId.fetch(post.similarity.to_i)}", "\##{post.similarity.to_i + 1}" , :id => "res#{post.similarity}")
+                end
+            end
+            %>
+        </div>
+    </div>
+    <% if first_flag == 0
+        @last_id = post.id
+        first_flag = 1
+    end
+    end %>
+    <div id="modalwin" class="modalwin hide">
+        <div class="setting" id="setting_form">
+            <div class="modalwin-header">
+                <button><a herf="#" class="modal-close"><h1><span class="h1"><<</span> 設定</h1></a></button>
+            </div>
+            <div class="modalwin-contents">
+                <div class="modal_setting">
+                    <ul>
+                        <a href="#"><li><img src="/posts.png">表示方法を変更する</li></a>
+                        <a onclick="confirmFunction1()" href="#" id="lock_room"><li><img src="/lock.png">この部屋をロックする</li></a>
+                        <a href="#"><li><img src="/report.png">この部屋を管理者に報告する</li></a>
+                        <a href="#"><li><img src="/share.png">SNSで共有する</li></a>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="new_post_form" id="post_form">
+            <div class="modalwin-header">
+                <button><a herf="#" class="modal-close"><h1><span class="h1"><<</span> <%=@room.name%></h1></a></button>
+            </div>
+            <div class="modalwin-contents">
+                <%= form_tag "/create", onsubmit: "submitWait();" do %>
+                <div class="form-body">
+                    <div class="form_wrapper">
+                        <textarea id="content" cols="30" rows="10" name="content" onkeyup="ShowLength(value);" class="post"></textarea>
+                        <p align="right" id="inputlength">0/300</p>
+                    </div>
+                    <label id="submit_label"  class="hoge" for="submit">
+                        投稿
+                        <input id="submit" type="submit" style="display:none;" />
+                    </label>
+                    <input name="roomId" type="hidden" value="<%= @room_id %>">
+                    <input id="image" name="image" type="hidden">
+                    <label class="hoge" for="upfile">
+                        +画像を追加
+                        <input type="file"  name="upfile" id="upfile" accept="image/*" style="display:none;" />
+                    </label>
+                    <div><img class="thumbnail" id="thumbnail" src="/thumbnail.jpg"></div>
+                    <input id="latitude" type="hidden" name="latitude">
+                    <input id="longitude" type="hidden" name="longitude">
+                    <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="pagetop" class="back"><img src="/top.png">
+    </div>
+
+
+  <script>
+    lockedRoom = <%=locked_room.to_i%>;
+    function confirmFunction1() {
+      if(<%=@room_id%> == 0){
+        alert("ラウンジはロックできません。");
+      } else{
+        if(lockedRoom && lockedRoom > 0){
+          judgeLock = confirm("既にロックされている部屋があります\nロックする部屋をこの部屋に変更しますか？");
+          if(judgeLock){
+            lockRoom();
+          }else{
+          }
+        }else{
+          lockRoom();
+        }
+      }
+    }
+    function lockRoom(){
+        $.ajax({
+          url: "/rooms/<%=@room_id%>/lockRoom",
+          type: 'GET',
+          data: {
+            lockRoom: <%=@room_id%>
+          },
+          dataType: 'json'
+        })
+        .then(function(data){
+          $('#room_name').attr('src','/lock.png')
+          alert("\"<%=@room.name%>\"をロックしました。\n一時間だけ、範囲外からでも利用できます。");
+        })
+    }
+    window.onload = init();
+    window.onload = getLocation();
+    setInterval(update, 10000);
+    setInterval(getLocation, 300000);
+    $(function() {
+      var topBtn = $('#pagetop');
+      topBtn.hide();
+      $(window).scroll(function () {
+        if ($(this).scrollTop() > 100) {
+          topBtn.fadeIn();
+        } else {
+          topBtn.fadeOut();
+        }
+      });
+
+      topBtn.click(function () {
+        $('body,html').animate({
+          scrollTop: 0
+        }, 500);
+        return false;
+      });
+    });
+    function ShowLength( str ) {
+      document.getElementById("inputlength").innerHTML = str.length + "/200";
+      form = document.getElementById("submit");
+      if (str.length > 200 || locationFlag == 0){
+        form.disabled = "disabled";
+        $('#submit_label').css('background-color','rgba(50,50,50,0.1)');
+        $('#submit_label').css('color','#888');
+      }else{
+        if (str.length < 201 && locationFlag == 1){
+          form.disabled = "";
+          $('#submit_label').css('background-color','#FFBB55');
+          $('#submit_label').css('color','#333');
+        }
+      }
+    }
+    $(function () {
+      function showModal(event) {
+        var id =  $(this).attr("id");
+        if(id == "setting"){
+          $("#post_form").css("display","none");
+          $("#setting_form").css("display","block");
+        }
+        if(id == "new_post_form"){
+          $("#setting_form").css("display","none");
+          $("#post_form").css("display","block");
+        }
+        event.preventDefault();
+        var $shade = $('<div></div>');
+        $shade
+        .attr('id', 'shade')
+        .on('click', hideModal);
+        var $modalWin = $('#modalwin');
+        var $window = $(window);
+        var posX = ($window.width() - $modalWin.outerWidth()) / 2;
+        var posY = ($window.height() - $modalWin.outerHeight()) / 2;
+
+        $modalWin
+        .before($shade)
+        .css({left: posX, top: posY})
+        .removeClass('hide')
+        .addClass('show')
+        .on('click', 'button', function () {
+          hideModal();
+        });
+      }
+
+      function hideModal() {
+        $('#shade').remove();
+        $('#modalwin')
+        .removeClass('show')
+        .addClass('hide');
+
+      }
+
+      $('.show-modal').on('click', showModal);
+
+    }());
+    function submitWait(){
+      form = document.getElementById("submit");
+      form.disabled = "disabled";
+      $('#submit_label').css('background-color','rgba(50,50,50,0.1)');
+      $('#submit_label').css('color','#888');
+    }
+    function init(){
+      locationFlag = 0;
+      counts = <%=@posts.count%>;
+      postId = <%= @postId.to_json.html_safe %>;
+      last_id = "<%= @last_id %>";
+    }
+    function saveLocation(){
+      $.ajax({
+        url: "/rooms/save_location",
+        type: 'GET',
+        data: {
+          userLat: userLat,
+          userLng: userLng
+        },
+        dataType: 'json'
+      })
+      .then(function(data){
+      })
+    }
+    function update(){
+      $.ajax({
+        url: location.href,
+        type: 'GET',
+        data: {
+          last_id: last_id
+        },
+        dataType: 'json'
+      })
+      .then(function(data){
+        if(data.length > 0){
+          $.each(data, function(i, data){
+            var content = escapeHTML(data['content']);
+            var image = null;
+            content = content.replace(/\r?\n/g, '<br>');
+            if (content.match(/&gt;&gt;\d*/)){
+              var anchor = "" + content.match(/&gt;&gt;\d*/);
+              content = content.replace(/&gt;&gt;\d*/,'<a class="anchor_link" href="#' + '">>>' + anchor.substr( 8 ) + '</a>')
+            }
+            postId[data['id']] = counts;
+            if(data['image'] == null){
+              var image = '';
+            } else{
+              var image = '<a href="' + data['image'] + '" target="_blank"><img src="' + data['image'] + '"　target="_blank" src="' + data['image'] + '"></a>';
+            }
+
+            if(data['simvalue'] > 0.49){
+              var similarity = data['similarity'];
+              $('#timeline').prepend('<div class="post"><div class="text_body">' + content + '</div>' + image + ' <div class="text_data">'  + postId[data['id']] + ' : less than a minute  <a href="#' + similarity  + '"> >>' + postId[data['similarity']]  + '</a></div> </div>');
+            }else{
+              $('#timeline').prepend('<div class="post"><div class="text_body">' + content + '</div> ' + image + '<div class="text_data">'  + postId[data['id']] + ' : less than a minute </div> </div>');
+            }
+            last_id = data['id'];
+          })
+        }
+      })
+    }
+    function getLocation(){
+      var geocoder;
+      navigator.geolocation.getCurrentPosition(is_success,is_error);
+      function is_success(position) {
+        var gpsLat = position.coords.latitude;
+        var gpsLng = position.coords.longitude;
+        gmap_init(gpsLat,gpsLng);
+      }
+      function is_error(error) {
+        var result = "";
+        switch(error.code) {
+          case 1:
+          result = '位置情報の取得が許可されていません';
+          break;
+          case 2:
+          result = '位置情報の取得に失敗';
+          break;
+          case 3:
+          result = 'タイムアウト';
+          break;
+        }
+      }
+      function gmap_init(gpsLat,gpsLng) {
+        var geocoder = new google.maps.Geocoder();
+        var latlng = new google.maps.LatLng(gpsLat,gpsLng);
+
+        geocoder.geocode({'latLng':latlng},function(results,status){
+          if (status == google.maps.GeocoderStatus.OK || lockedRoom == <%=@room_id.to_i%>) {
+            console.log(results[1].formatted_address);
+            result  = '現在地の取得に成功<br>';
+            result += '経度：' + gpsLat + '<br>';
+            result += '緯度：' + gpsLng + '<br>';
+            result += '住所：' + results[0].formatted_address + '<br>';
+            userLat = gpsLat;
+            userLng = gpsLng;
+            saveLocation();
+            $("#latitude").val(userLat);
+            $("#longitude").val(userLng);
+            $("#loading").css("display", "none");
+            if(lockedRoom == <%=@room_id%>){
+             $('#room_name').attr('src','/lock.png')
+            }
+            checkLocation();
+          } else {
+            $("#loading").css("display", "none");
+            if(lockedRoom == <%=@room_id%>){
+             $('#room_name').attr('src','/lock.png')
+            }
+          }
+        });
+      }
+    }
+    function displayTime(unixTime) {
+  var date = new Date(unixTime)
+  var diff = new Date().getTime() - date.getTime()
+  var d = new Date(diff);
+
+  if (d.getUTCFullYear() - 1970) {
+    return d.getUTCFullYear() - 1970 + 'years'
+  } else if (d.getUTCMonth()) {
+    return d.getUTCMonth() + 'months'
+  } else if (d.getUTCDate() - 1) {
+    return d.getUTCDate() - 1 + 'days'
+  } else if (d.getUTCHours()) {
+    return d.getUTCHours() + 'hours'
+  } else if (d.getUTCMinutes()) {
+    return d.getUTCMinutes() + 'minutes'
+  } else {
+    return 'less than a minute'
+  }
+}
+    function checkLocation(){
+      var startLat = <%= @start_latitude %>;
+      var endLat = <%= @end_latitude %>;
+      var startLng = <%= @start_longitude %>;
+      var endLng = <%= @end_longitude%>;
+      if(startLat < userLat　&& userLat < endLat && startLng < userLng && userLng < endLng || lockedRoom == <%=@room_id%>){
+        locationFlag = 1;
+        console.log("checkLocation is ok");
+        $("#timeline").css("display", "block");
+        $("#loading").css("display", "none");
+            if(lockedRoom == <%=@room_id%>){
+             $('#room_name').attr('src','/lock.png')
+            }
+      }else{
+        alert("タイムラインの範囲以内にいないため、表示できません。\nトップページに戻ります");
+        location.href="/";
+        exit;
+      }
+
+    }
+    $('#upfile').change(function(){
+      if (this.files.length > 0) {
+        var file = this.files[0];
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        console.log(reader);
+        reader.onload = function() {
+          var height = 500;
+          $('#thumbnail').attr('src', reader.result );
+          var image = reader.result;
+          document.getElementById('image').value=image;
+        }
+      }
+    });
+    function escapeHTML(str) {
+      return str.replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    }
+  </script>

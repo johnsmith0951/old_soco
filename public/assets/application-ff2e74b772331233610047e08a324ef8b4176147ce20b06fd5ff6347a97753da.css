@@ -1,0 +1,161 @@
+/*lyaout*/
+
+body{
+	background-image:url("/bg.jpg");
+	margin:0;
+	font-family: 'Montserrat', 'Noto Sans Japanese', sans-serif;
+}
+header{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:45px;
+  background-color:rgba(50,50,50,0.2);
+  line-height:45px;
+}
+header img{
+  vertical-align:middle;
+  margin-right:5px;
+}
+div.top{
+	width:80%;
+	margin:auto;
+	padding:0;
+	font-size:25px;
+	}
+div.main{
+	width:80%;
+	margin:auto;
+	margin-top:10px;
+	padding:0;
+}
+div.post{
+	padding:10px;
+	background-color:rgba(255,255,255,0.3);
+	margin:0 15px 15px 0;
+	display:inline-block
+}
+/* link */
+div.post a{
+	color:black;
+	}
+header a{
+	color:#333;
+	text-decoration:none;
+}
+header a:hover{
+	color:#333;
+	text-decoration:none;
+	opacity:0.5;
+}
+
+/* list */
+ul, li{
+	padding:0;
+	margin:0;
+}
+.header-menus {
+  float: right;
+}
+
+.header-menus li {
+  float: left;
+  font-size: 16px;
+  list-style:none;
+  padding-left: 15px;
+}
+
+.header-menus a {
+  float: left;
+  font-size: 16px;
+}
+
+.header-menus .fa {
+  padding-right: 5px;
+}
+/* form */
+.form {
+  width: 100%;
+  margin: 0 auto;
+  border:none;
+}
+
+.form-heading {
+  font-weight: 300;
+  margin: 60px 0 20px;
+  font-size: 48px;
+  color: #bcc8d4;
+}
+
+.form-body {
+  padding: 30px;
+}
+
+.form-error {
+  color: #ff4d75;
+}
+
+.form input {
+  width: 100%;
+  padding: 10px;
+  color: #57575f;
+  font-size: 16px;
+  letter-spacing: 2px;
+  border:none;
+}
+.form input:hover{
+	color:red;
+}
+.form textarea {
+  width: 100%;
+  min-height: 110px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  background-color:rgba(255,255,255,0.5);
+  border:none;
+  outline:0;
+}
+.form textarea :focus{
+outline:0;
+border:0;
+}
+.form input[type="submit"] {
+  background-color:rgba(50,50,50,0.2);
+  color: black;
+  cursor: pointer;
+  font-size:18px;
+  bordr:none;
+  width: 120px;
+  margin-top: 8px;
+  margin-bottom: 0;
+  float: right;
+}
+.form input:hover[type="submit"] {
+  background-color:rgba(50,50,50,0.2);
+  color: rgba(0,0,0,0.5);
+  cursor: pointer;
+  font-size:18px;
+  bordr:none;
+  width: 120px;
+  margin-top: 8px;
+  margin-bottom: 0;
+  float: right;
+}
+
+.form-body:after {
+  content: '';
+  clear: both;
+}
+
+/* font */
+h1{
+	font-size:30px;
+	text-align:center;
+	color:#444;
+}
+.top{
+	font-size:15px;
+}
+.title{
+	font-weight:bold;
+}

@@ -1,0 +1,7 @@
+I"[(function() {
+  $(function() {
+    return alert("Hello World");
+  });
+
+}).call(this);
+:ET
